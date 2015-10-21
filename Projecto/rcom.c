@@ -8,44 +8,44 @@
 #include "rcom.h"
 
 volatile int STOP=FALSE;
-volatile int flag=FALSE;
-unsigned char SET[5];
-int fd, res, tentativas = 0;
 
-void atende() // atende alarme
-{
-	if(!flag && tentativas < 3){
-		send_SET();
-		tentativas++;
-		alarm(5);
-	};
+int llopen(int porta, TRANSMITTER | RECEIVER){
+	char porta[20];
+	sprintf(porta, "/dev/ttyS%d", porta);
+	return open(porta, O_RDWR | O_NOCTTY );
 }
-void send_SET(){
-	int i = 0;
-    while(i < 5){
-		res = write(fd,&SET[i],1);  
-		i++;
+int llwrite(int fd, char * buffer, int length){
+	int i;
+	for(i = 0; i < length; i++){
+		if(write(fd, &buffer[i], 1) < -1)
+			return -1;
 	}
-	i=0;
-	printf("Send: 0x%x 0x%x 0x%x 0x%x 0x%x \n", SET[0], SET[1], SET[2], SET[3], SET[4]);
+	return i;
+}
+int llread(int fd, char * buffer){
+	return read(fd, buffer, 1);
+}
+int llclose(int fd){
+	return close(fd);
 }
 int main(int argc, char** argv)
 {
     struct termios oldtio,newtio;
     char buf[255];
 	unsigned char UA[5];
+	unsigned char SET[5];
+	int fd, res;
 
-	(void) signal(SIGALRM, atende);
 
     if ( (argc < 2) || 
-  	     ((strcmp("/dev/ttyS4", argv[1])!=0) && 
-  	      (strcmp("/dev/ttyS1", argv[1])!=0) )) {
+  	     (strcmp("/dev/ttyS4", argv[1])!=0) ) {
       printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
       exit(1);
     }
 
-    fd = open(argv[1], O_RDWR | O_NOCTTY );
-    if (fd <0) {perror(argv[1]); exit(-1); }
+    fd = llopen(4, TRANSMITTER);
+
+    if (fd < 0) {perror(argv[1]); exit(-1); }
 
     if ( tcgetattr(fd,&oldtio) == -1) { /* save current port settings */
       perror("tcgetattr");
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN]     = 1;   /* blocking read until 5 chars received */
+    newtio.c_cc[VMIN]     = 1;   /* blocking read until 1 chars received */
 
 
     tcflush(fd, TCIFLUSH);
