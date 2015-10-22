@@ -9,6 +9,8 @@
 #define C_SET 0x07
 #define BCC (A^C_SET)
 
+typedef enum {TRANSMITTER, RECEIVER} Status;
+
 struct applicationLayer {
 	int fileDescriptor; /*Descritor correspondente à porta série*/
 	int status; /*TRANSMITTER | RECEIVER*/
@@ -24,7 +26,7 @@ struct linkLayer {
 }
 /*
 argumentos
- - porta: COM1, COM2, ... 
+ - porta: COM1, COM2, ...
  - flag: TRANSMITTER / RECEIVER
 retorno
 	identificador da ligação de dados
@@ -36,7 +38,7 @@ int llopen(int porta, TRANSMITTER | RECEIVER);
 argumentos
 	fd: identificador da ligação de dados
 	buffer: array de caracteres a transmitir
-	length: comprimento do array de caracteres 
+	length: comprimento do array de caracteres
 retorno
 	número de caracteres escritos
 	valor negativo em caso de erro
