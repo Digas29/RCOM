@@ -1,8 +1,16 @@
 #pragma once
 
 #define MAX_SIZE 256
+#define F 0x7E
+#define A_SR 0x03
+#define A_RS 0x01
+#define SupervisionSize 5s
 
 #include "Connection.h"
+
+typedef enum {
+	C_SET = 0x03, C_UA = 0x07, C_RR = 0x05, C_REJ = 0x01, C_DISC = 0x0B
+} Control;
 
 typedef struct {
 	char port[20]; /*Dispositivo /dev/ttySx, x = 0, 1*/

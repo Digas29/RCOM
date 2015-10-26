@@ -1,11 +1,4 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <termios.h>
-#include <stdio.h>
-#include <signal.h>
-#include <unistd.h>
-#include "rcom.h"
+#include "alarm.h"
 
 #define MODEMDEVICE "/dev/ttyS1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -20,7 +13,7 @@
 
 int main(int argc, char** argv)
 {
-
+	(void) signal(SIGALRM, alarmHandler);
 	// if ( (argc < 2) ||
 	// (strcmp("/dev/ttyS4", argv[1])!=0) ) {
 	// 	printf("Usage:\tnserial SerialPort\n\tex: nserial /dev/ttyS1\n");
