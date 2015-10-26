@@ -1,4 +1,5 @@
 #include "alarm.h"
+#include <signal.h>
 
 #define MODEMDEVICE "/dev/ttyS1"
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -12,6 +13,6 @@
 int main(int argc, char** argv)
 {
 	(void) signal(SIGALRM, alarmHandler);
-	
+
 	return 0;
 }

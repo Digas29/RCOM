@@ -1,7 +1,7 @@
 #include "LinkLayer.h"
 
 int openPort(char * port){
-  return open(porta, O_RDWR | O_NOCTTY );
+  return open(port, O_RDWR | O_NOCTTY );
 }
 
 int closePortAndResetTermios(){
@@ -16,8 +16,7 @@ int closePortAndResetTermios(){
 int startLinkLayer(char * port, Mode connectionMode, int baudrate, int dataMax, int timeout, int maxRetries){
   linkLayer = (LinkLayer*)malloc(sizeof(LinkLayer));
   strcpy(link->port, port);
-  linkLayer->mode = connectionMode;
-  linkLayer->baudrate = baudrate;
+  linkLayer->baudRate = baudrate;
   linkLayer->messageMaxSize = dataMax;
   linkLayer->timeout = timeout;
   linkLayer->numTransmissions = maxRetries;
@@ -35,7 +34,7 @@ int termiosSettings(){
   }
 
   bzero(&linkLayer->newtio, sizeof(linkLayer->newtio));
-  newtio.c_cflag = link->baudrate | CS8 | CLOCAL | CREAD;
+  newtio.c_cflag = linkLayer->baudRate | CS8 | CLOCAL | CREAD;
   linkLayer->newtio.c_iflag = IGNPAR;
   linkLayer->newtio.c_oflag = OPOST;
   linkLayer->newtio.c_lflag = 0;
@@ -43,7 +42,7 @@ int termiosSettings(){
   linkLayer->newtio.c_cc[VTIME]    = 3;   /* inter-character timer unused */
   linkLayer->newtio.c_cc[VMIN]     = 0;   /* blocking read until 1 chars received */
 
-  if(tcflush(appLayer->fd, TCIFLUSH) != 0{
+  if(tcflush(appLayer->fd, TCIFLUSH) != 0){
     printf("Error in flushing termios settings.\n ");
     return 0;
   }
@@ -186,7 +185,7 @@ int llread(int fd, char * buffer){
         if(c == F){
           buffer[size] = c;
           size++;
-          estado++;
+          return size;
         }
         else{
           size = 0;
@@ -208,5 +207,6 @@ int llread(int fd, char * buffer){
       break;
     }
   }
+  //destuff
   return size;
 }
