@@ -4,7 +4,7 @@
 #define F 0x7E
 #define A_SR 0x03
 #define A_RS 0x01
-#define SupervisionSize 5s
+#define SupervisionSize 5
 
 #include "Connection.h"
 #include "Application.h"
@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <cstdlib.h>
 #include <cstring.h>
 #include <strings.h>
