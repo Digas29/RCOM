@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
-#include <cstdlib.h>
+#include <stdlib.h>
 
 typedef struct  {
 	int fd; /*Descritor correspondente à porta série*/
