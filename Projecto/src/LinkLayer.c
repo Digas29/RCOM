@@ -1,5 +1,4 @@
-#include "Application.h"
-#include "Alarm.h"
+#include "LinkLayer.h"
 
 int openPort(char * port){
   return open(porta, O_RDWR | O_NOCTTY );
@@ -119,6 +118,7 @@ int llopen(Mode connectionMode){
 int llwrite(int fd, char * buffer, int length){
   return write(fd, buffer, length);
 }
+
 int llread(int fd, char * buffer){
   volatile int done = FALSE;
 

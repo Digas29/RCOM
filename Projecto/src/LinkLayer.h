@@ -7,6 +7,15 @@
 #define SupervisionSize 5s
 
 #include "Connection.h"
+#include "Application.h"
+#include "Alarm.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <termios.h>
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
 
 typedef enum {
 	C_SET = 0x03, C_UA = 0x07, C_RR = 0x05, C_REJ = 0x01, C_DISC = 0x0B

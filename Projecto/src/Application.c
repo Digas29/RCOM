@@ -1,7 +1,4 @@
 #include "Application.h"
-#include "LinkLayer.h"
-#include "Connection.h"
-
 int initAppLayer(char * port, Mode connectionMode, int baudRate, int messageMaxSize, int retries, int timeout, char* fileName){
   appLayer = (ApplicationLayer *) malloc(sizeof(ApplicationLayer));
   appLayer->fd = openPort(port);

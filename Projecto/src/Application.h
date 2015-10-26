@@ -1,6 +1,14 @@
 #pragma once
 
 #include "Connection.h"
+#include "LinkLayer.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <termios.h>
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
 
 typedef struct  {
 	int fd; /*Descritor correspondente à porta série*/
