@@ -5,7 +5,7 @@ int openPort(char * port){
 }
 
 int closePortAndResetTermios(){
-  if ( tcsetattr(appLayer->fd,TCSANOW,&link->oldtio) == -1) {
+  if ( tcsetattr(appLayer->fd,TCSANOW,&linkLayer->oldtio) == -1) {
   	perror("tcsetattr");
   	return 0;
   }
@@ -14,14 +14,14 @@ int closePortAndResetTermios(){
 }
 
 int startLinkLayer(char * port, Mode connectionMode, int baudrate, int dataMax, int timeout, int maxRetries){
-  link = (LinkLay*)malloc(sizeof(LinkLayer));
+  linkLayer = (LinkLayer*)malloc(sizeof(LinkLayer));
   strcpy(link->port, port);
-  link->mode = connectionMode;
-  link->baudrate = baudrate;
-  link->messageMaxSize = dataMax;
-  link->timeout = timeout;
-  link->numTransmissions = maxRetries;
-  link->sequenceNumber = 0;
+  linkLayer->mode = connectionMode;
+  linkLayer->baudrate = baudrate;
+  linkLayer->messageMaxSize = dataMax;
+  linkLayer->timeout = timeout;
+  linkLayer->numTransmissions = maxRetries;
+  linkLayer->sequenceNumber = 0;
   if(!termiosSettings()){
     return 0;
   }
@@ -29,26 +29,26 @@ int startLinkLayer(char * port, Mode connectionMode, int baudrate, int dataMax, 
 }
 
 int termiosSettings(){
-  if ( tcgetattr(appLayer->fd,&link->oldtio) == -1) { /* save current port settings */
+  if ( tcgetattr(appLayer->fd,&linkLayer->oldtio) == -1) { /* save current port settings */
     printf("Error in saving termios settings.\n ");
     return 0;
   }
 
-  bzero(&link->newtio, sizeof(link->newtio));
+  bzero(&linkLayer->newtio, sizeof(linkLayer->newtio));
   newtio.c_cflag = link->baudrate | CS8 | CLOCAL | CREAD;
-  link->newtio.c_iflag = IGNPAR;
-  link->newtio.c_oflag = OPOST;
-  link->newtio.c_lflag = 0;
+  linkLayer->newtio.c_iflag = IGNPAR;
+  linkLayer->newtio.c_oflag = OPOST;
+  linkLayer->newtio.c_lflag = 0;
 
-  link->newtio.c_cc[VTIME]    = 3;   /* inter-character timer unused */
-  link->newtio.c_cc[VMIN]     = 0;   /* blocking read until 1 chars received */
+  linkLayer->newtio.c_cc[VTIME]    = 3;   /* inter-character timer unused */
+  linkLayer->newtio.c_cc[VMIN]     = 0;   /* blocking read until 1 chars received */
 
   if(tcflush(appLayer->fd, TCIFLUSH) != 0{
     printf("Error in flushing termios settings.\n ");
     return 0;
   }
 
-  if ( tcsetattr(appLayer->fd,TCSANOW,&link->newtio) == -1) {
+  if ( tcsetattr(appLayer->fd,TCSANOW,&linkLayer->newtio) == -1) {
     printf("Error in setting termios settings.");
     return 0;
   }
@@ -63,7 +63,7 @@ int llopen(Mode connectionMode){
 	if(connectionMode == TRANSMITTER) {
 		while (!connected) {
 			if (tries == 0 || timeExceeded) {
-				if (tries >= link->numTransmissions) {
+				if (tries >= linkLayer->numTransmissions) {
 					printf("Error: number of tries exceeded.\n");
 					printf("Connection aborted.\n");
 					return 0;
@@ -77,10 +77,10 @@ int llopen(Mode connectionMode){
       	SET[3] = SET[1] ^ SET[2];
       	SET[4] = F;
 
-        llwrite(appLayer->fd, SET, SupervisionSize * sizeof(char));
+        write(appLayer->fd, SET, SupervisionSize * sizeof(char));
         free(SET);
 				tries++;
-				setAlarm(link->timeout);
+				setAlarm(linkLayer->timeout);
 			}
 
       char response[MAX_SIZE];
@@ -104,7 +104,7 @@ int llopen(Mode connectionMode){
       	UA[3] = UA[1] ^ UA[2];
       	UA[4] = F;
 
-				llwrite(appLayer->fd, UA, 5* sizeof(char));
+				write(appLayer->fd, UA, SupervisionSize * sizeof(char));
         free(UA);
         connected = 1;
 				printf("Connection established! :)\n");

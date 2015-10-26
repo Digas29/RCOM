@@ -40,7 +40,7 @@ typedef struct {
 
 } LinkLayer;
 
-extern LinkLayer* link;
+extern LinkLayer* linkLayer;
 
 int openPort(char * port);
 int closePortAndResetTermios();
