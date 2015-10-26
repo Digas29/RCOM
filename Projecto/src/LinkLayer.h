@@ -17,7 +17,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <cstring.h>
+#include <string.h>
 #include <strings.h>
 
 typedef enum {
