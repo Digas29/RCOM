@@ -14,6 +14,17 @@
 
 #define APP_MAX_SIZE 20000
 
+typedef enum {
+	DATA = 0,
+	START = 1,
+	END = 2
+} ControlPackage;
+
+typedef enum {
+	SIZE = 0,
+	NAME = 1
+} Type;
+
 typedef struct  {
 	int fd; /*Descritor correspondente à porta série*/
 	Mode mode; /*TRANSMITTER | RECEIVER*/
@@ -26,3 +37,4 @@ int initAppLayer(char * port, Mode connectionMode, int baudRate, int messageMaxS
 
 int send();
 int receive();
+int sendControlPackage(ControlPackage C, char* fileName, char* fileSize);

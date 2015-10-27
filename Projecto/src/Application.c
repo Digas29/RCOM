@@ -30,15 +30,69 @@ int send(){
   }
 
   fseek(file, 0, SEEK_END);
-  int fileSize = ftell(file);
+  unsigned int fileSize = ftell(file);
   fseek(file, 0, SEEK_SET);
   char fileSizeString[20];
-  sprintf(fileSizeString, "%d", fileSize);
+  sprintf(fileSizeString, "%u", fileSize);
+  printf("File size: %u Bytes", fileSize);
+  if(llopen(appLayer->fd,appLayer->mode) < 0){
+    return 0;
+  }
+  if(sendControlPackage(START,appLayer->fileName, fileSizeString) < 0){
+    printf("Error: can't send start control package\n");
+    return 0;
+  }
+  //send file...
 
-  int fd = llopen(appLayer->fd,appLayer->mode);
+  if (fclose(file) != 0) {
+    printf("Error: File was not closed....\n");
+    return 0;
+  }
+  if(sendControlPackage(END,appLayer->fileName, fileSizeString) < 0){
+    printf("Error: can't send end control package\n");
+    return 0;
+  }
+
+  if(llclose(appLayer->fd,appLayer->mode) < 0){
+    return 0;
+  }
+  printf("\n");
+  printf("File transfered successfully. \n");
   return 1;
 }
 
 int receive(){
-  return 1;
+  int fd =
+	if (llopen(appLayer->fd, appLayer->mode) <= 0)
+		return 0;
+
+	if (!llclose(appLayer->fd, appLayer->mode)) {
+		printf("Erro Serial port was not closed.\n");
+		return 0;
+	}
+
+	printf("\n");
+	printf("File transfered successfully. \n");
+
+	return 1;
+}
+
+int sendControlPackage(ControlPackage C, char* fileName, char * fileSize){
+  unsigned int size = 5 + strlen(fileName) + strlen(fileSize);
+  char CPackage[size];
+
+  int i, j = 0;
+
+  controlPackage[j++] = C;
+	controlPackage[j++] = SIZE;
+	controlPackage[j++] = strlen(fileSize);
+	for (i = 0; i < strlen(fileSize); i++)
+		controlPackage[j++] = fileSize[i];
+
+	controlPackage[j++] = NAME;
+	controlPackage[j++] = strlen(fileName);
+	for (i = 0; i < strlen(fileName); i++)
+		controlPackage[pos++] = fileName[i];
+
+  return llwrite(appLayer->fd, controlPackage, size);
 }
