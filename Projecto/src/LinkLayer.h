@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <limits.h>
 
 typedef enum {
 	C_SET = 0x03, C_UA = 0x07, C_RR = 0x01, C_REJ = 0x05, C_DISC = 0x0B
@@ -59,10 +60,10 @@ int recieveSupervisonFrame(int fd, char * frame);
 
 int llopen(int fd,Mode connectionMode);
 int llwrite(int fd, char * buffer, unsigned int length);
-int llread(int fd, char * buffer);
-int llclose(int fd);
+int llread(int fd, char * data);
+int llclose(int fd, Mode connectionMode);
 
 unsigned int stuff(char* buf, unsigned int frameSize);
-unsigned int destuff(char** buf, unsigned int frameSize);
+unsigned int destuff(char* buf, unsigned int frameSize);
 
 char BCC2(char* data, unsigned int dataSize);

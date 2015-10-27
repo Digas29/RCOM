@@ -85,8 +85,9 @@ int llopen(int fd, Mode connectionMode){
       char response[MAX_SIZE];
       int nread = recieveSupervisonFrame(fd, response);
       if(nread == SupervisionSize * sizeof(char) && response[1] == A_SR && response[2] == C_UA){
-        connected = 1;
         offAlarm();
+        printf("Connection established! :)\n");
+        connected = 1;
       }
 		}
 	}
@@ -113,7 +114,6 @@ int llopen(int fd, Mode connectionMode){
 
 	return fd;
 }
-
 int llwrite(int fd, char * buffer, unsigned int length){
   char frame[length + DataSize * sizeof(char)];
   char BCC_2 = BCC2(buffer, length);
@@ -171,13 +171,13 @@ int llwrite(int fd, char * buffer, unsigned int length){
   }
   return newSize;
 }
-
-int llread(int fd, char * buffer){
+int llread(int fd, char * data){
   volatile int done = FALSE;
 
   int estado = 0;
   int size = 0;
 
+  char buffer[UINT_MAX];
 
   while(!done){
     char c;
@@ -254,7 +254,7 @@ int llread(int fd, char * buffer){
     }
   }
   int process = FALSE;
-  int newSize = destuff(&buffer, size);
+  int newSize = destuff(buffer, size);
   int dataSize = newSize - DataSize * sizeof(char);
   char BCC = BCC2(&buffer[4], dataSize);
   unsigned int sn = (buffer[2] >> 5) & 1;
@@ -284,11 +284,95 @@ int llread(int fd, char * buffer){
   response[3] = response[1] ^ response[2];
   sendSupervisonFrame(fd, response);
   if(process){
-    return size;
+    memcpy(data, &buffer[4], dataSize);
+    return dataSize;
   }
   return -1;
 }
+int llclose(int fd, Mode connectionMode){
+  printf("Disconnecting...\n");
 
+	int tries = 0, disconnected = 0;
+
+	if(connectionMode == TRANSMITTER) {
+		while (!disconnected) {
+			if (tries == 0 || timeExceeded) {
+				if (tries >= linkLayer->numTransmissions) {
+					printf("Error: number of tries exceeded.\n");
+					printf("Disconnection aborted.\n");
+					return -1;
+				}
+
+        char* DISC = malloc(SupervisionSize * sizeof(char));
+
+      	DISC[0] = F;
+      	DISC[1] = A_SR;
+      	DISC[2] = C_DISC;
+      	DISC[3] = DISC[1] ^ DISC[2];
+      	DISC[4] = F;
+
+        sendSupervisonFrame(fd, DISC);
+        free(DISC);
+				tries++;
+				setAlarm(linkLayer->timeout);
+			}
+
+      char response[MAX_SIZE];
+      int nread = recieveSupervisonFrame(fd, response);
+      if(nread == SupervisionSize * sizeof(char) && response[1] == A_RS && response[2] == C_DISC){
+        disconnected = 1;
+        offAlarm();
+        char* UA = malloc(SupervisionSize * sizeof(char));
+
+      	UA[0] = F;
+      	UA[1] = A_RS;
+      	UA[2] = C_SET;
+      	UA[3] = UA[1] ^ UA[2];
+      	UA[4] = F;
+
+				sendSupervisonFrame(fd, UA);
+        free(UA);
+        printf("Disconnected! :)\n");
+      }
+		}
+	}
+  else if(connectionMode == RECEIVER){
+    char DISC_S[MAX_SIZE];
+    recieveSupervisonFrame(fd, DISC_S);
+    if(DISC_S[1] == A_SR && DISC_S[2] == C_DISC){
+      while (!disconnected) {
+
+        if (tries == 0 || timeExceeded) {
+          if (tries >= linkLayer->numTransmissions) {
+  					printf("Error: number of tries exceeded.\n");
+  					printf("Disconnection aborted.\n");
+  					return -1;
+  				}
+          char* DISC = malloc(SupervisionSize * sizeof(char));
+
+          DISC[0] = F;
+          DISC[1] = A_SR;
+          DISC[2] = C_DISC;
+          DISC[3] = DISC[1] ^ DISC[2];
+          DISC[4] = F;
+
+          sendSupervisonFrame(fd, DISC);
+          tries++;
+          free(DISC);
+          setAlarm(linkLayer->timeout);
+        }
+        char UA[MAX_SIZE];
+        recieveSupervisonFrame(fd, UA);
+        if(UA[1] == A_RS && UA[2] == C_UA){
+          disconnected = 1;
+          printf("Disconnected! :)\n");
+        }
+      }
+    }
+  }
+
+	return 1;
+}
 int sendSupervisonFrame(int fd, char * frame){
   return write(fd, frame, SupervisionSize * sizeof(char));
 }
@@ -396,19 +480,19 @@ unsigned int stuff(char* buf, unsigned int frameSize){
 
 	return newframeSize;
 }
-unsigned int destuff(char** buf, unsigned int frameSize){
+unsigned int destuff(char* buf, unsigned int frameSize){
 	int i;
 	for (i = 1; i < frameSize - 1; ++i) {
-		if ((*buf)[i] == ESCAPE) {
-			memmove(*buf + i, *buf + i + 1, frameSize - i - 1);
+		if (buf[i] == ESCAPE) {
+			memmove(buf + i, buf + i + 1, frameSize - i - 1);
 
 			frameSize--;
 
-			(*buf)[i] ^= 0x20;
+			buf[i] ^= 0x20;
 		}
 	}
 
-	*buf = (char*) realloc(*buf, frameSize);
+	buf = (char*) realloc(buf, frameSize);
 
 	return frameSize;
 }
