@@ -70,11 +70,11 @@ int receive(){
       char package[APP_MAX_SIZE] = "";
       llread(appLayer->fd, package);
       if(package[0] == END){
-        done = true;
+        done = TRUE;
       }
       int i;
       for(i = 0; i < APP_MAX_SIZE; i++){
-        if(package[i] = 0)
+        if(package[i] == 0)
           break;
         printf("0x%x", package[i]);
       }
@@ -98,16 +98,16 @@ int sendControlPackage(ControlPackage C, char* fileName, char * fileSize){
 
   int i, j = 0;
 
-  controlPackage[j++] = C;
-	controlPackage[j++] = SIZE;
-	controlPackage[j++] = strlen(fileSize);
+  CPackage[j++] = C;
+	CPackage[j++] = SIZE;
+	CPackage[j++] = strlen(fileSize);
 	for (i = 0; i < strlen(fileSize); i++)
-		controlPackage[j++] = fileSize[i];
+		CPackage[j++] = fileSize[i];
 
-	controlPackage[j++] = NAME;
-	controlPackage[j++] = strlen(fileName);
+	CPackage[j++] = NAME;
+	CPackage[j++] = strlen(fileName);
 	for (i = 0; i < strlen(fileName); i++)
-		controlPackage[pos++] = fileName[i];
+		CPackage[j++] = fileName[i];
 
-  return llwrite(appLayer->fd, controlPackage, size);
+  return llwrite(appLayer->fd, CPackage, size);
 }
