@@ -62,9 +62,24 @@ int send(){
 }
 
 int receive(){
-  int fd =
-	if (llopen(appLayer->fd, appLayer->mode) <= 0)
-		return 0;
+    if (llopen(appLayer->fd, appLayer->mode) <= 0)
+		  return 0;
+
+    int done = FALSE;
+    while(!done){
+      char package[APP_MAX_SIZE] = "";
+      llread(appLayer->fd, package);
+      if(package[0] == END){
+        done = true;
+      }
+      int i;
+      for(i = 0; i < APP_MAX_SIZE; i++){
+        if(package[i] = 0)
+          break;
+        printf("0x%x", package[i]);
+      }
+      memset(package, 0, APP_MAX_SIZE);
+    }
 
 	if (!llclose(appLayer->fd, appLayer->mode)) {
 		printf("Erro Serial port was not closed.\n");

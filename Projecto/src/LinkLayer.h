@@ -1,6 +1,5 @@
 #pragma once
 
-#define MAX_SIZE 256
 #define F 0x7E
 #define ESCAPE 0x7D
 #define A_SR 0x03
