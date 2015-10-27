@@ -22,7 +22,7 @@
 #include <string.h>
 #include <strings.h>
 #include <limits.h>
-
+int getBaudrate(int baudrate);
 typedef enum {
 	C_SET = 0x03, C_UA = 0x07, C_RR = 0x01, C_REJ = 0x05, C_DISC = 0x0B
 } Control;
