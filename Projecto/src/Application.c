@@ -1,4 +1,5 @@
 #include "Application.h"
+
 int initAppLayer(char * port, Mode connectionMode, int baudRate, int messageMaxSize, int retries, int timeout, char* fileName){
   appLayer = (ApplicationLayer *) malloc(sizeof(ApplicationLayer));
   appLayer->fd = openPort(port);
@@ -8,7 +9,7 @@ int initAppLayer(char * port, Mode connectionMode, int baudRate, int messageMaxS
   }
   appLayer->mode = connectionMode;
   appLayer->fileName = fileName;
-  if(!startLinkLayer(port,connectionMode, baudRate, messageMaxSize, retries, timeout)){
+  if(!startLinkLayer(appLayer->fd, port, connectionMode, baudRate, messageMaxSize, retries, timeout)){
     printf("Error in initialize Link Layer.\n");
     return 0;
   }
@@ -18,7 +19,7 @@ int initAppLayer(char * port, Mode connectionMode, int baudRate, int messageMaxS
   else if(appLayer->mode == RECEIVER){
     receive();
   }
-  closePortAndResetTermios();
+  closePortAndResetTermios(appLayer->fd);
   return 1;
 }
 int send(){
@@ -34,9 +35,10 @@ int send(){
   char fileSizeString[20];
   sprintf(fileSizeString, "%d", fileSize);
 
-  int fd = llopen(appLayer->mode);
+  int fd = llopen(appLayer->fd,appLayer->mode);
+  return 1;
 }
 
 int receive(){
-
+  return 1;
 }

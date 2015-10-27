@@ -4,37 +4,37 @@ int openPort(char * port){
   return open(port, O_RDWR | O_NOCTTY );
 }
 
-int closePortAndResetTermios(){
-  if ( tcsetattr(appLayer->fd,TCSANOW,&linkLayer->oldtio) == -1) {
+int closePortAndResetTermios(int fd){
+  if ( tcsetattr(fd,TCSANOW,&linkLayer->oldtio) == -1) {
   	perror("tcsetattr");
   	return 0;
   }
-  close(appLayer->fd);
+  close(fd);
   return 1;
 }
 
-int startLinkLayer(char * port, Mode connectionMode, int baudrate, int dataMax, int timeout, int maxRetries){
+int startLinkLayer(int fd, char * port, Mode connectionMode, int baudrate, int dataMax, int timeout, int maxRetries){
   linkLayer = (LinkLayer*)malloc(sizeof(LinkLayer));
-  strcpy(link->port, port);
+  strcpy(linkLayer->port, port);
   linkLayer->baudRate = baudrate;
   linkLayer->messageMaxSize = dataMax;
   linkLayer->timeout = timeout;
   linkLayer->numTransmissions = maxRetries;
   linkLayer->sequenceNumber = 0;
-  if(!termiosSettings()){
+  if(!termiosSettings(fd)){
     return 0;
   }
   return 1;
 }
 
-int termiosSettings(){
-  if ( tcgetattr(appLayer->fd,&linkLayer->oldtio) == -1) { /* save current port settings */
+int termiosSettings(int fd){
+  if ( tcgetattr(fd,&linkLayer->oldtio) == -1) { /* save current port settings */
     printf("Error in saving termios settings.\n ");
     return 0;
   }
 
   bzero(&linkLayer->newtio, sizeof(linkLayer->newtio));
-  newtio.c_cflag = linkLayer->baudRate | CS8 | CLOCAL | CREAD;
+  linkLayer->newtio.c_cflag = linkLayer->baudRate | CS8 | CLOCAL | CREAD;
   linkLayer->newtio.c_iflag = IGNPAR;
   linkLayer->newtio.c_oflag = OPOST;
   linkLayer->newtio.c_lflag = 0;
@@ -42,19 +42,19 @@ int termiosSettings(){
   linkLayer->newtio.c_cc[VTIME]    = 3;   /* inter-character timer unused */
   linkLayer->newtio.c_cc[VMIN]     = 0;   /* blocking read until 1 chars received */
 
-  if(tcflush(appLayer->fd, TCIFLUSH) != 0){
+  if(tcflush(fd, TCIFLUSH) != 0){
     printf("Error in flushing termios settings.\n ");
     return 0;
   }
 
-  if ( tcsetattr(appLayer->fd,TCSANOW,&linkLayer->newtio) == -1) {
+  if ( tcsetattr(fd,TCSANOW,&linkLayer->newtio) == -1) {
     printf("Error in setting termios settings.");
     return 0;
   }
   return 1;
 }
 
-int llopen(Mode connectionMode){
+int llopen(int fd, Mode connectionMode){
   printf("Establishing a connection...\n");
 
 	int tries = 0, connected = 0;
@@ -65,7 +65,7 @@ int llopen(Mode connectionMode){
 				if (tries >= linkLayer->numTransmissions) {
 					printf("Error: number of tries exceeded.\n");
 					printf("Connection aborted.\n");
-					return 0;
+					return -1;
 				}
 
         char* SET = malloc(SupervisionSize * sizeof(char));
@@ -76,15 +76,15 @@ int llopen(Mode connectionMode){
       	SET[3] = SET[1] ^ SET[2];
       	SET[4] = F;
 
-        write(appLayer->fd, SET, SupervisionSize * sizeof(char));
+        sendSupervisonFrame(fd, SET);
         free(SET);
 				tries++;
 				setAlarm(linkLayer->timeout);
 			}
 
       char response[MAX_SIZE];
-      llread(appLayer->fd, response);
-      if(response[1] == A_SR && response[2] == C_UA){
+      int nread = recieveSupervisonFrame(fd, response);
+      if(nread == SupervisionSize * sizeof(char) && response[1] == A_SR && response[2] == C_UA){
         connected = 1;
         offAlarm();
       }
@@ -93,7 +93,7 @@ int llopen(Mode connectionMode){
 	else if(connectionMode == RECEIVER){
 		while (!connected) {
       char SET[MAX_SIZE];
-      llread(appLayer->fd, SET);
+      recieveSupervisonFrame(fd, SET);
       if(SET[1] == A_SR && SET[2] == C_SET){
         char* UA = malloc(SupervisionSize * sizeof(char));
 
@@ -103,7 +103,7 @@ int llopen(Mode connectionMode){
       	UA[3] = UA[1] ^ UA[2];
       	UA[4] = F;
 
-				write(appLayer->fd, UA, SupervisionSize * sizeof(char));
+				sendSupervisonFrame(fd, UA);
         free(UA);
         connected = 1;
 				printf("Connection established! :)\n");
@@ -111,11 +111,65 @@ int llopen(Mode connectionMode){
 		}
 	}
 
-	return appLayer->fd;
+	return fd;
 }
 
-int llwrite(int fd, char * buffer, int length){
-  return write(fd, buffer, length);
+int llwrite(int fd, char * buffer, unsigned int length){
+  char frame[length + DataSize * sizeof(char)];
+  char BCC_2 = BCC2(buffer, length);
+  frame[0] = F;
+  frame[1] = A_SR;
+  frame[2] = (linkLayer->sequenceNumber << 5);
+  frame[3] = frame[1]^frame[2];
+  memcpy(&frame[4], buffer, length);
+  frame[4 + length] = BCC_2;
+  frame[5 + length] = F;
+
+  int newSize = stuff(frame, length + DataSize * sizeof(char));
+
+  int done = FALSE;
+  int tries = 0;
+  while(!done){
+    if(tries == 0 || timeExceeded){
+      if (tries >= linkLayer->numTransmissions) {
+        printf("Error: number of tries exceeded.\n");
+        printf("Connection aborted.\n");
+        return -1;
+      }
+      if(write(fd, frame, newSize) == -1){
+        printf("Error in write data frame...\n");
+        return -1;
+      }
+      tries++;
+      setAlarm(linkLayer->timeout);
+    }
+    char response[MAX_SIZE];
+    int nread = recieveSupervisonFrame(fd, response);
+    if(nread == SupervisionSize * sizeof(char) && response[1] == A_SR){
+      if((response[2] & 0x0F) == C_REJ){
+        if((response[2] >> 5) == linkLayer->sequenceNumber){
+          offAlarm();
+          tries = 0;
+        }
+        else{
+          printf("Something went really wrong in REJ... \n");
+          return -1;
+        }
+      }
+      else if ((response[2] & 0x0F) == C_RR){
+        if((response[2] >> 5) != linkLayer->sequenceNumber){
+          offAlarm();
+          linkLayer->sequenceNumber = (response[2] >> 5);
+          done = TRUE;
+        }
+        else{
+          printf("Something went really wrong in RR... \n");
+          return -1;
+        }
+      }
+    }
+  }
+  return newSize;
 }
 
 int llread(int fd, char * buffer){
@@ -123,13 +177,15 @@ int llread(int fd, char * buffer){
 
   int estado = 0;
   int size = 0;
-  int tries = 0;
+
 
   while(!done){
     char c;
-    if(read(fd, &c, 1) == -1){
-      printf("Error in llread()!! \n");
-      return -1;
+    if(estado < 5){
+      if(read(fd, &c, 1) == -1){
+        printf("Error in llread()!! \n");
+        return -1;
+      }
     }
 
     switch(estado){
@@ -152,7 +208,7 @@ int llread(int fd, char * buffer){
         }
         break;
     case 2:
-      if(c == C_SET || c == C_UA || c == C_RR || c == C_REJ || c == C_DISC){
+      if(c == 0 || c == (1 << 5)){
         buffer[size] = c;
         size++;
         estado++;
@@ -180,33 +236,188 @@ int llread(int fd, char * buffer){
         size = 0;
         estado = 0;
       }
+      break;
     case 4:
-      if(buffer[2] != 0 && buffer[2] != (1<<5)){
         if(c == F){
           buffer[size] = c;
           size++;
-          return size;
+          estado++;
         }
         else{
           size = 0;
           estado = 0;
         }
-      }
-      else{
-        if(c == 0){
-          estado++;
-        }
-        else{
-          buffer[size] = c;
-          size++;
-        }
-      }
       break;
     default:
       done = TRUE;
       break;
     }
   }
-  //destuff
+  int process = FALSE;
+  int newSize = destuff(&buffer, size);
+  int dataSize = newSize - DataSize * sizeof(char);
+  char BCC = BCC2(&buffer[4], dataSize);
+  unsigned int sn = (buffer[2] >> 5) & 1;
+  char response[SupervisionSize * sizeof(char)];
+  response[0] = F;
+  response[1] = A_SR;
+  response[4] = F;
+  if(linkLayer->sequenceNumber == sn){
+    if(BCC != buffer[newSize - 1]){
+      printf("Frame received with BCC2 wrong... \n Rejecting frame (REJ)... \n");
+      response[2] = (linkLayer->sequenceNumber << 5) | C_REJ;
+    }
+    else{
+      if(linkLayer->sequenceNumber == 0){
+        linkLayer->sequenceNumber = 1;
+      }
+      else{
+        linkLayer->sequenceNumber = 0;
+      }
+      process = TRUE;
+      response[2] = (linkLayer->sequenceNumber << 5) | C_RR;
+    }
+  }
+  else{
+    response[2] = (linkLayer->sequenceNumber << 5) | C_RR;
+  }
+  response[3] = response[1] ^ response[2];
+  sendSupervisonFrame(fd, response);
+  if(process){
+    return size;
+  }
+  return -1;
+}
+
+int sendSupervisonFrame(int fd, char * frame){
+  return write(fd, frame, SupervisionSize * sizeof(char));
+}
+int recieveSupervisonFrame(int fd, char * frame){
+  volatile int done = FALSE;
+
+  int estado = 0;
+  int size = 0;
+
+  while(!done){
+    char c;
+    if(estado < 5){
+      if(read(fd, &c, 1) == -1){
+        printf("Error in llread()!! \n");
+        return -1;
+      }
+    }
+
+    switch(estado){
+    case 0:
+      if(c == F){
+        frame[size] = c;
+        size++;
+        estado++;
+      }
+      break;
+    case 1:
+        if(c == A_SR || c == A_RS){
+          frame[size] = c;
+          size++;
+          estado++;
+        }
+        else if(c != F){
+          size = 0;
+          estado = 0;
+        }
+        break;
+    case 2:
+      if(c == C_SET || c == C_UA || c == C_RR || c == C_REJ || c == C_DISC){
+        frame[size] = c;
+        size++;
+        estado++;
+      }
+      else if (c == F){
+        size = 1;
+        estado = 1;
+      }
+      else{
+        size = 0;
+        estado = 0;
+      }
+      break;
+    case 3:
+      if(c == (frame[1] ^ frame[2])){
+        frame[size] = c;
+        size++;
+        estado++;
+      }
+      else if (c == F){
+        size = 1;
+        estado = 1;
+      }
+      else{
+        size = 0;
+        estado = 0;
+      }
+      break;
+    case 4:
+        if(c == F){
+          frame[size] = c;
+          size++;
+          estado++;
+        }
+        else{
+          size = 0;
+          estado = 0;
+        }
+      break;
+    default:
+      done = TRUE;
+      break;
+    }
+  }
   return size;
+}
+
+unsigned int stuff(char* buf, unsigned int frameSize){
+	unsigned int newframeSize = frameSize;
+
+	int i;
+	for (i = 1; i < frameSize - 1; i++)
+		if (buf[i] == F || buf[i] == ESCAPE)
+			newframeSize++;
+
+	buf = (char*) realloc(buf, newframeSize);
+
+	for (i = 1; i < frameSize - 1; i++) {
+		if (buf[i] == F || buf[i] == ESCAPE) {
+			memmove(buf + i + 1, buf + i, frameSize - i);
+			frameSize++;
+			buf[i] = ESCAPE;
+			buf[i + 1] ^= 0x20;
+		}
+	}
+
+	return newframeSize;
+}
+unsigned int destuff(char** buf, unsigned int frameSize){
+	int i;
+	for (i = 1; i < frameSize - 1; ++i) {
+		if ((*buf)[i] == ESCAPE) {
+			memmove(*buf + i, *buf + i + 1, frameSize - i - 1);
+
+			frameSize--;
+
+			(*buf)[i] ^= 0x20;
+		}
+	}
+
+	*buf = (char*) realloc(*buf, frameSize);
+
+	return frameSize;
+}
+
+char BCC2(char* data, unsigned int dataSize){
+  int i;
+  char BCC = 0;
+  for(i = 0; i < dataSize; i++){
+    BCC ^= data[i];
+  }
+  return BCC;
 }

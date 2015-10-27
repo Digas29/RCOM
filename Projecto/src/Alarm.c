@@ -1,5 +1,6 @@
 #include "Alarm.h"
-#include <unistd.h>
+
+int timeExceeded = 0;
 
 void alarmHandler(){
   timeExceeded = 1;
@@ -9,5 +10,6 @@ void setAlarm(int seconds){
   alarm(seconds);
 }
 void offAlarm(){
+  timeExceeded = 0;
   alarm(0);
 }

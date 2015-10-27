@@ -12,7 +12,7 @@ SRC = $(wildcard src/*.c)
 
 OBJ = $(patsubst src%, buildtemp%.o, $(SRC))
 
-OUT = bin/nserial
+OUT = bin/serialport
 
 .SUFFIXES: .c
 
