@@ -454,6 +454,7 @@ int recieveSupervisonFrame(int fd, char * frame){
     char c;
 		if(estado < 5){
 			int retorno = read(fd, &c, 1);
+			printf("%x\n",c);
       if(retorno == -1){
         printf("Error in llread()!! \n");
         return -1;
