@@ -66,17 +66,17 @@ int receive(){
 		  return 0;
 
     int done = FALSE;
+ 		char package[APP_MAX_SIZE];
+		memset(package, 0, APP_MAX_SIZE);
     while(!done){
-      char package[APP_MAX_SIZE] = "";
-      llread(appLayer->fd, package);
+     
+      int size = llread(appLayer->fd, package);
       if(package[0] == END){
         done = TRUE;
       }
       int i;
-      for(i = 0; i < APP_MAX_SIZE; i++){
-        if(package[i] == 0)
-          break;
-        printf("0x%x", package[i]);
+      for(i = 0; i < size; i++){
+        printf("%x\n", package[i]);
       }
       memset(package, 0, APP_MAX_SIZE);
     }
