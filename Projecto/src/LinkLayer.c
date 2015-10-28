@@ -159,7 +159,7 @@ int llopen(int fd, Mode connectionMode){
 	return fd;
 }
 int llwrite(int fd, char * buffer, unsigned int length){
-  char frame[length + DataSize * sizeof(char)];
+  char* frame = (char*)malloc(length + DataSize * sizeof(char));
   char BCC_2 = BCC2(buffer, length);
   frame[0] = F;
   frame[1] = A_SR;
@@ -189,7 +189,9 @@ int llwrite(int fd, char * buffer, unsigned int length){
     }
     char response[MAX_SIZE];
     int nread = recieveSupervisonFrame(fd, response);
+
     if(nread == SupervisionSize * sizeof(char) && response[1] == A_SR){
+		
       if((response[2] & 0x0F) == C_REJ){
         if((response[2] >> 5) == linkLayer->sequenceNumber){
           offAlarm();
@@ -518,9 +520,7 @@ unsigned int stuff(char* buf, unsigned int frameSize){
 	for (i = 1; i < frameSize - 1; i++)
 		if (buf[i] == F || buf[i] == ESCAPE)
 			newframeSize++;
-
 	buf = (char*) realloc(buf, newframeSize);
-
 	for (i = 1; i < frameSize - 1; i++) {
 		if (buf[i] == F || buf[i] == ESCAPE) {
 			memmove(buf + i + 1, buf + i, frameSize - i);

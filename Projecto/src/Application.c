@@ -42,6 +42,7 @@ int send(){
     printf("Error: can't send start control package\n");
     return 0;
   }
+	printf("seeeend\n");
   //send file...
 
   if (fclose(file) != 0) {
@@ -52,7 +53,6 @@ int send(){
     printf("Error: can't send end control package\n");
     return 0;
   }
-
   if(llclose(appLayer->fd,appLayer->mode) < 0){
     return 0;
   }
@@ -108,6 +108,5 @@ int sendControlPackage(ControlPackage C, char* fileName, char * fileSize){
 	CPackage[j++] = strlen(fileName);
 	for (i = 0; i < strlen(fileName); i++)
 		CPackage[j++] = fileName[i];
-
   return llwrite(appLayer->fd, CPackage, size);
 }
