@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define APP_MAX_SIZE 2000
 
 typedef enum {
 	DATA = 0,

@@ -127,7 +127,7 @@ int llopen(int fd, Mode connectionMode){
 				setAlarm(linkLayer->timeout);
 			}
       char response[MAX_SIZE];
-      int nread = recieveSupervisonFrame(fd, response);
+      recieveSupervisonFrame(fd, response);
       if(response[1] == A_SR && response[2] == C_UA){
         offAlarm();
         printf("Connection established! :)\n");
@@ -221,7 +221,7 @@ int llread(int fd, char * data){
   int estado = 0;
   int size = 0;
 
-  char buffer[UINT_MAX];
+  char buffer[APP_MAX_SIZE*2];
 
   while(!done){
     char c;

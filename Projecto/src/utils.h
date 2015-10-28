@@ -4,4 +4,5 @@
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE !FALSE
+#define APP_MAX_SIZE 2000
 #define MAX_SIZE 256
