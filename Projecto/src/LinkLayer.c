@@ -319,6 +319,10 @@ int llread(int fd, char * data){
   }
   int process = FALSE;
   int newSize = destuff(buffer, size);
+	if(buffer[0] != F || buffer[1] != A_SR || buffer[3] != (buffer[1] ^ buffer[2])){
+		printf("Frame received with BCC wrong... \n");
+		return -1;
+	}
 
   int dataSize = newSize - DataSize * sizeof(char);
 

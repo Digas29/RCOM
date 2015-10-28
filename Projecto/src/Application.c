@@ -66,6 +66,9 @@ int receive(){
 		  return 0;
 
     int done = FALSE;
+		char fileName[20] = "";
+		char fileSizeS[20] = "";
+		unsigned int fileSize;
  		char package[APP_MAX_SIZE];
 		memset(package, 0, APP_MAX_SIZE);
     while(!done){
@@ -74,10 +77,26 @@ int receive(){
       if(package[0] == END){
         done = TRUE;
       }
-      int i;
-      for(i = 0; i < size; i++){
-        printf("%x\n", package[i]);
-      }
+			if(package[0] == START){
+				int j = 1;
+				while(j < size){
+					int i = 0;
+					if(package[j] == SIZE){
+						for(; i < package[j+1]; i++){
+							fileSizeS[i] = package[i+j+2];
+						}
+					}
+					else if(package[j] == NAME){
+						for(; i < package[j+1]; i++){
+							fileName[i] = package[i+j+2];
+						}
+					}
+					j+= i + 2;
+				}
+
+				printf("%s \n",fileName);
+				printf("%s \n",fileSizeS);
+			}
       memset(package, 0, APP_MAX_SIZE);
     }
 
