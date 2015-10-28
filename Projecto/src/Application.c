@@ -4,7 +4,7 @@ int initAppLayer(char * port, Mode connectionMode, int baudRate, int messageMaxS
   appLayer = (ApplicationLayer *) malloc(sizeof(ApplicationLayer));
   appLayer->fd = openPort(port);
   if (appLayer->fd < 0) {
-    printf("Serial port cannot be oppened!");
+    printf("Serial port cannot be oppened!\n");
     return 0;
   }
   appLayer->mode = connectionMode;
@@ -34,7 +34,7 @@ int send(){
   fseek(file, 0, SEEK_SET);
   char fileSizeString[20];
   sprintf(fileSizeString, "%u", fileSize);
-  printf("File size: %u Bytes", fileSize);
+  printf("File size: %u Bytes \n", fileSize);
   if(llopen(appLayer->fd,appLayer->mode) < 0){
     return 0;
   }

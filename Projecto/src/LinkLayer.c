@@ -1,4 +1,5 @@
 #include "LinkLayer.h"
+
 int getBaudrate(int baudrate) {
 	switch (baudrate) {
 	case 0:
@@ -120,13 +121,11 @@ int llopen(int fd, Mode connectionMode){
       	SET[2] = C_SET;
       	SET[3] = SET[1] ^ SET[2];
       	SET[4] = F;
-
         sendSupervisonFrame(fd, SET);
         free(SET);
 				tries++;
 				setAlarm(linkLayer->timeout);
 			}
-
       char response[MAX_SIZE];
       int nread = recieveSupervisonFrame(fd, response);
       if(nread == SupervisionSize * sizeof(char) && response[1] == A_SR && response[2] == C_UA){
@@ -227,10 +226,14 @@ int llread(int fd, char * data){
   while(!done){
     char c;
     if(estado < 5){
-      if(read(fd, &c, 1) == -1){
+			int retorno = read(fd, &c, 1);
+      if(retorno == -1){
         printf("Error in llread()!! \n");
         return -1;
       }
+			else if (retorno == 0){
+				return -1;
+			}
     }
 
     switch(estado){
@@ -429,11 +432,15 @@ int recieveSupervisonFrame(int fd, char * frame){
 
   while(!done){
     char c;
-    if(estado < 5){
-      if(read(fd, &c, 1) == -1){
+		if(estado < 5){
+			int retorno = read(fd, &c, 1);
+      if(retorno == -1){
         printf("Error in llread()!! \n");
         return -1;
       }
+			else if (retorno == 0 && timeExceeded){
+				return -1;
+			}
     }
 
     switch(estado){

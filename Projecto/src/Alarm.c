@@ -1,4 +1,5 @@
 #include "Alarm.h"
+#include <stdio.h>
 
 int timeExceeded = 0;
 
