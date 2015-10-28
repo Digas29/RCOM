@@ -128,7 +128,7 @@ int llopen(int fd, Mode connectionMode){
 			}
       char response[MAX_SIZE];
       int nread = recieveSupervisonFrame(fd, response);
-      if(nread == SupervisionSize * sizeof(char) && response[1] == A_SR && response[2] == C_UA){
+      if(response[1] == A_SR && response[2] == C_UA){
         offAlarm();
         printf("Connection established! :)\n");
         connected = 1;
