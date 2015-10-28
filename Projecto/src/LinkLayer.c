@@ -144,7 +144,7 @@ int llopen(int fd, Mode connectionMode){
 
       	UA[0] = F;
       	UA[1] = A_SR;
-      	UA[2] = C_SET;
+      	UA[2] = C_UA;
       	UA[3] = UA[1] ^ UA[2];
       	UA[4] = F;
 
