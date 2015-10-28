@@ -223,19 +223,15 @@ int llread(int fd, char * data){
   int estado = 0;
   int size = 0;
 
-  char buffer[APP_MAX_SIZE*2];
-
+  char * buffer = (char*)malloc(APP_MAX_SIZE*2);
   while(!done){
     char c;
-    if(estado < 5){
+    if(estado < 3){
 			int retorno = read(fd, &c, 1);
       if(retorno == -1){
         printf("Error in llread()!! \n");
         return -1;
       }
-			else if (retorno == 0){
-				return -1;
-			}
     }
 
     switch(estado){
@@ -246,7 +242,18 @@ int llread(int fd, char * data){
         estado++;
       }
       break;
-    case 1:
+		case 1:
+			if(c == F){
+        buffer[size] = c;
+        size++;
+        estado++;
+      }
+			else{
+        buffer[size] = c;
+        size++;
+			}
+      break;
+/*    case 1:
         if(c == A_SR || c == A_RS){
           buffer[size] = c;
           size++;
@@ -297,7 +304,7 @@ int llread(int fd, char * data){
           size = 0;
           estado = 0;
         }
-      break;
+      break;*/
     default:
       done = TRUE;
       break;
@@ -305,7 +312,9 @@ int llread(int fd, char * data){
   }
   int process = FALSE;
   int newSize = destuff(buffer, size);
+
   int dataSize = newSize - DataSize * sizeof(char);
+
   char BCC = BCC2(&buffer[4], dataSize);
   unsigned int sn = (buffer[2] >> 5) & 1;
   char response[SupervisionSize * sizeof(char)];
@@ -313,7 +322,7 @@ int llread(int fd, char * data){
   response[1] = A_SR;
   response[4] = F;
   if(linkLayer->sequenceNumber == sn){
-    if(BCC != buffer[newSize - 1]){
+    if(BCC != buffer[newSize - 2]){
       printf("Frame received with BCC2 wrong... \n Rejecting frame (REJ)... \n");
       response[2] = (linkLayer->sequenceNumber << 5) | C_REJ;
     }
@@ -335,8 +344,10 @@ int llread(int fd, char * data){
   sendSupervisonFrame(fd, response);
   if(process){
     memcpy(data, &buffer[4], dataSize);
+		free(buffer);
     return dataSize;
   }
+	free(buffer);
   return -1;
 }
 int llclose(int fd, Mode connectionMode){
