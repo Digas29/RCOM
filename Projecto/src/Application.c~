@@ -104,7 +104,10 @@ int receive(){
     while(!done){
      
       int size = llread(appLayer->fd, package);
-			printf("Size = %d\n",size);
+			if(size == -1){
+				globalStatistics->numberOfREJ++;
+				continue;
+}
 			int nPackages = 0;
       if(package[0] == END){
         done = TRUE;

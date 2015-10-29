@@ -207,7 +207,7 @@ int llwrite(int fd, char * buffer, unsigned int length){
           offAlarm();
           linkLayer->sequenceNumber = (response[2] >> 5);
           done = TRUE;
-	globalStatistics->numberOfFrameReceived
+	globalStatistics->numberOfFrameReceived++;
         }
         else{
 					timeExceeded = 1;
@@ -277,7 +277,6 @@ int llread(int fd, char * data){
     if(BCC != buffer[newSize - 2]){ //if frame got corrupted
       printf("Frame received with BCC2 wrong... \n Rejecting frame (REJ)... \n");
       response[2] = (linkLayer->sequenceNumber << 5) | C_REJ;
-	globalStatistics->numberOfREJ++;
     }
     else{
       if(linkLayer->sequenceNumber == 0){
@@ -300,7 +299,7 @@ int llread(int fd, char * data){
     memcpy(data, &buffer[4], dataSize);
 		free(buffer);
     return dataSize;
-  }
+  }else globalStatistics->numberOfREJ++;
 	free(buffer);
   return -1;
 }

@@ -277,7 +277,6 @@ int llread(int fd, char * data){
     if(BCC != buffer[newSize - 2]){ //if frame got corrupted
       printf("Frame received with BCC2 wrong... \n Rejecting frame (REJ)... \n");
       response[2] = (linkLayer->sequenceNumber << 5) | C_REJ;
-	globalStatistics->numberOfREJ++;
     }
     else{
       if(linkLayer->sequenceNumber == 0){
@@ -288,7 +287,6 @@ int llread(int fd, char * data){
       }
       process = TRUE;
       response[2] = (linkLayer->sequenceNumber << 5) | C_RR;
-	globalStatistics->numberOfFrameReceived++;
     }
   }
   else{
