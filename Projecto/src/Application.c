@@ -139,8 +139,8 @@ int receive(){
 			}
 			if(package[0] == DATA && file != NULL){
 				printf("Data package: %d \n", package[1]);
-				unsigned int tamanho = package[2] * 256 + package[3];
-				printf("Size data package: %d \n", tamanho);
+				unsigned int tamanho = package[2] << 8 | package[3];
+				printf("Size data package: %u \n", tamanho);
 				fwrite(&package[4], sizeof(char), tamanho,file);
 			}
 			
