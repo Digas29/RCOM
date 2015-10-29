@@ -3,6 +3,7 @@
 int initAppLayer(char * port, Mode connectionMode, int baudRate, int messageMaxSize, int retries, int timeout, char* fileName){
   appLayer = (ApplicationLayer *) malloc(sizeof(ApplicationLayer));
   appLayer->fd = openPort(port);
+	appLayer->messageMaxSize = messageMaxSize;
   if (appLayer->fd < 0) {
     printf("Serial port cannot be oppened!\n");
     return 0;
@@ -42,9 +43,17 @@ int send(){
     printf("Error: can't send start control package\n");
     return 0;
   }
-	printf("seeeend\n");
-  //send file...
-
+	unsigned int bytes;
+	char fBytes[appLayer->messageMaxSize + 2];
+	int nPackages = 0;
+	while((bytes = fread(&fBytes[2],sizeof(char), appLayer->messageMaxSize, file)) > 0){
+		nPackages++;
+		fBytes[0] = DATA;
+		fBytes[1] = bytes;
+		if(llwrite(appLayer->fd, fBytes, bytes) == -1){
+			printf("Error cannot send package %d... \n", nPackages);
+		}
+	}
   if (fclose(file) != 0) {
     printf("Error: File was not closed....\n");
     return 0;
@@ -66,11 +75,13 @@ int receive(){
 		  return 0;
 
     int done = FALSE;
+		FILE* file; 
 		char fileName[20] = "";
 		char fileSizeS[20] = "";
 		unsigned int fileSize; // isto nao esta sendo usado caro
  		char package[APP_MAX_SIZE];
 		memset(package, 0, APP_MAX_SIZE);
+
     while(!done){
      
       int size = llread(appLayer->fd, package);
@@ -93,12 +104,18 @@ int receive(){
 					}
 					j+= i + 2;
 				}
-
-				printf("%s \n",fileName);
-				printf("%s \n",fileSizeS);
+				fileSize = atoi(fileSizeS);
+				file = fopen(fileName, "wb");
+				if(!file){
+					printf("Error the specified file cannot be created! \n");
+					return 0;
+				}
 			}
-      memset(package, 0, APP_MAX_SIZE);
-    }
+			if(package[0] == DATA && file != NULL){
+				fwrite(&package[2], sizeof(char), package[1],file);
+			}
+    	memset(package, 0, APP_MAX_SIZE);
+  }
 
 	if (!llclose(appLayer->fd, appLayer->mode)) {
 		printf("Erro Serial port was not closed.\n");

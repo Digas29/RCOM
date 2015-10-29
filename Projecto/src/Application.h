@@ -28,6 +28,7 @@ typedef struct  {
 	int fd; /*Descritor correspondente à porta série*/
 	Mode mode; /*TRANSMITTER | RECEIVER*/
   char* fileName;
+	unsigned int messageMaxSize;
 } ApplicationLayer;
 
 ApplicationLayer * appLayer;

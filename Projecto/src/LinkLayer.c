@@ -202,7 +202,6 @@ int llwrite(int fd, char * buffer, unsigned int length){
         }
       }
       else if ((response[2] & 0x0F) == C_RR){
-				printf("olajohn\n");
         if((response[2] >> 5) != linkLayer->sequenceNumber){
           offAlarm();
           linkLayer->sequenceNumber = (response[2] >> 5);
@@ -323,7 +322,6 @@ int llclose(int fd, Mode connectionMode){
       	DISC[2] = C_DISC;
       	DISC[3] = DISC[1] ^ DISC[2];
       	DISC[4] = F;
-printf("0x%x \n", DISC[2]);
         sendSupervisonFrame(fd, DISC);
         free(DISC);
 				tries++;
