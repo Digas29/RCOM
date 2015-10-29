@@ -4,7 +4,7 @@
 
 int main(int argc, char** argv)
 {
-	if(argc < 8)
+	if(argc != 8)
 	{
 	printf("Number of Arguments Wrong: string port, int connectionMode, int baudRate, int messageMaxSize, int retries, int timeout, string fileName\n");
 	return -1;

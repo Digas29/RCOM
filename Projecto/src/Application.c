@@ -50,8 +50,9 @@ int send(){
 		nPackages++;
 		fBytes[0] = DATA;
 		fBytes[1] = bytes;
-		if(llwrite(appLayer->fd, fBytes, bytes) == -1){
+		if(llwrite(appLayer->fd, fBytes, bytes + 2) == -1){
 			printf("Error cannot send package %d... \n", nPackages);
+			return 0;
 		}
 	}
   if (fclose(file) != 0) {
@@ -115,6 +116,10 @@ int receive(){
 				fwrite(&package[2], sizeof(char), package[1],file);
 			}
     	memset(package, 0, APP_MAX_SIZE);
+  }
+  if (fclose(file) != 0) {
+    printf("Error: %s was not closed....\n", fileName);
+    return 0;
   }
 
 	if (!llclose(appLayer->fd, appLayer->mode)) {
