@@ -66,8 +66,10 @@ int send(){
 	while((bytes = fread(&fBytes[2],sizeof(char), appLayer->messageMaxSize, file)) > 0){
 		nPackages++;
 		fBytes[0] = DATA;
-		fBytes[1] = bytes;
-		if(llwrite(appLayer->fd, fBytes, bytes + 2) == -1){
+		fBytes[1] = nPackages;
+		fBytes[2] = bytes/256;
+		fBytes[3] = bytes%256;
+		if(llwrite(appLayer->fd, fBytes, bytes + 4) == -1){
 			printf("Error cannot send package %d... \n", nPackages);
 			return 0;
 		}
@@ -136,8 +138,9 @@ int receive(){
 				}
 			}
 			if(package[0] == DATA && file != NULL){
-				nPackages++;
-				fwrite(&package[2], sizeof(char), package[1],file);
+				printf("Data package: %d", package[1]);
+				int tamanho = package[2] * 256 + package[3];
+				fwrite(&package[4], sizeof(char), tamanho,file);
 			}
 			
     	memset(package, 0, APP_MAX_SIZE);
