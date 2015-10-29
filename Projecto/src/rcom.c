@@ -9,7 +9,6 @@ int main(int argc, char** argv)
 	printf("Number of Arguments Wrong: string port, int connectionMode, int baudRate, int messageMaxSize, int retries, int timeout, string fileName\n");
 	return -1;
 	}
-	initializeStatistics();
 	
 	char* port = argv[1];
 	int baudRate = atoi(argv[3]);
@@ -28,26 +27,10 @@ int main(int argc, char** argv)
 		connectionMode = RECEIVER;
 
 	initAppLayer(port, connectionMode, baudRate, messageMaxSize, retries, timeout, fileName);
-
-	FILE* fileptr = fopen("Statistics.txt","w");
-	
-	fprintf(fileptr,("Number of Frames Received/Transmited : %d\n"),globalStatistics->numberOfFrameReceived);
-	fprintf(fileptr,("Number of Timeouts Occurrences : %d\n"),globalStatistics->numberOftimeOuts);
-	fprintf(fileptr,("Number of REJ Received/Transmited : %d\n"),globalStatistics->numberOfREJ);
-	
-	free(globalStatistics);// free the global Statistics variable
 	return 0;
-}
-
-void initializeStatistics(){
-	globalStatistics = (Statistics*)malloc(sizeof(Statistics));
-	globalStatistics->numberOfFrameReceived = 0;
-	globalStatistics->numberOftimeOuts = 0;
-	globalStatistics->numberOfREJ = 0;
 }
 
 /*		initAppLayer("/dev/ttyS4", TRANSMITTER, 38400, 20000, 3, 3, "pinguim.gif");
 	else
 		initAppLayer("/dev/ttyS0", RECEIVER, 38400, 20000, 3, 3, "pinguim.gif");
 */
-

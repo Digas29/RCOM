@@ -6,17 +6,3 @@
 #define TRUE !FALSE
 #define APP_MAX_SIZE 2000
 #define MAX_SIZE 256
-
-typedef struct{
-
-int numberOfFrameReceived;
-int numberOftimeOuts;
-int numberOfREJ;
-
-
-} Statistics;
-
-Statistics* globalStatistics;
-
-void initializeStatistics();
-

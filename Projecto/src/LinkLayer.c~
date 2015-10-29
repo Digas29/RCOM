@@ -189,10 +189,16 @@ int llwrite(int fd, char * buffer, unsigned int length){
     }
     char response[MAX_SIZE];
     
-		recieveSupervisonFrame(fd, response);
-    if(response[1] == A_SR || response[0] == F){
+		printf("%d\n",recieveSupervisonFrame(fd, response));
+		printf("cenas1\n");
+    if(response[1] == A_SR){
+		printf("merda\n");
+		printf("0x%x\n",response[0]);
+		printf("0x%x\n",response[1]);
+		printf("0x%x\n",response[2]);
+		printf("0x%x\n",response[3]);
+		printf("0x%x\n",response[4]);
       if((response[2] & 0x0F) == C_REJ){
-	globalStatistics->numberOfREJ++;
         if((response[2] >> 5) == linkLayer->sequenceNumber){
           offAlarm();
           tries = 0;
@@ -203,14 +209,15 @@ int llwrite(int fd, char * buffer, unsigned int length){
         }
       }
       else if ((response[2] & 0x0F) == C_RR){
+				printf("olajohn\n");
         if((response[2] >> 5) != linkLayer->sequenceNumber){
           offAlarm();
           linkLayer->sequenceNumber = (response[2] >> 5);
           done = TRUE;
-	globalStatistics->numberOfFrameReceived
         }
         else{
-					timeExceeded = 1;
+          printf("Something went really wrong in RR... \n");
+          return -1;
         }
       }
     }
@@ -253,6 +260,58 @@ int llread(int fd, char * data){
         size++;
 			}
       break;
+/*    case 1:
+        if(c == A_SR || c == A_RS){
+          buffer[size] = c;
+          size++;
+          estado++;
+        }
+        else if(c != F){
+          size = 0;
+          estado = 0;
+        }
+        break;
+    case 2:
+      if(c == 0 || c == (1 << 5)){
+        buffer[size] = c;
+        size++;
+        estado++;
+      }
+      else if (c == F){
+        size = 1;
+        estado = 1;
+      }
+      else{
+        size = 0;
+        estado = 0;
+      }
+      break;
+    case 3:
+      if(c == (buffer[1] ^ buffer[2])){
+        buffer[size] = c;
+        size++;
+        estado++;
+      }
+      else if (c == F){
+        size = 1;
+        estado = 1;
+      }
+      else{
+        size = 0;
+        estado = 0;
+      }
+      break;
+    case 4:
+        if(c == F){
+          buffer[size] = c;
+          size++;
+          estado++;
+        }
+        else{
+          size = 0;
+          estado = 0;
+        }
+      break;*/
     default:
       done = TRUE;
       break;
@@ -260,10 +319,6 @@ int llread(int fd, char * data){
   }
   int process = FALSE;
   int newSize = destuff(buffer, size);
-	if(buffer[0] != F || buffer[1] != A_SR || buffer[3] != (buffer[1] ^ buffer[2])){
-		printf("Frame received with BCC wrong... \n");
-		return -1;
-	}
 
   int dataSize = newSize - DataSize * sizeof(char);
 
@@ -274,10 +329,9 @@ int llread(int fd, char * data){
   response[1] = A_SR;
   response[4] = F;
   if(linkLayer->sequenceNumber == sn){
-    if(BCC != buffer[newSize - 2]){ //if frame got corrupted
+    if(BCC != buffer[newSize - 2]){
       printf("Frame received with BCC2 wrong... \n Rejecting frame (REJ)... \n");
       response[2] = (linkLayer->sequenceNumber << 5) | C_REJ;
-	globalStatistics->numberOfREJ++;
     }
     else{
       if(linkLayer->sequenceNumber == 0){
@@ -288,7 +342,6 @@ int llread(int fd, char * data){
       }
       process = TRUE;
       response[2] = (linkLayer->sequenceNumber << 5) | C_RR;
-	globalStatistics->numberOfFrameReceived++;
     }
   }
   else{
@@ -305,7 +358,7 @@ int llread(int fd, char * data){
   return -1;
 }
 int llclose(int fd, Mode connectionMode){
-  printf("\nDisconnecting...\n");
+  printf("Disconnecting...\n");
 
 	int tries = 0, disconnected = 0;
 
@@ -325,6 +378,7 @@ int llclose(int fd, Mode connectionMode){
       	DISC[2] = C_DISC;
       	DISC[3] = DISC[1] ^ DISC[2];
       	DISC[4] = F;
+
         sendSupervisonFrame(fd, DISC);
         free(DISC);
 				tries++;
@@ -332,15 +386,15 @@ int llclose(int fd, Mode connectionMode){
 			}
 
       char response[MAX_SIZE];
-      recieveSupervisonFrame(fd, response);
-      if(response[1] == A_RS && response[2] == C_DISC){
+      int nread = recieveSupervisonFrame(fd, response);
+      if(nread == SupervisionSize * sizeof(char) && response[1] == A_RS && response[2] == C_DISC){
         disconnected = 1;
         offAlarm();
         char* UA = malloc(SupervisionSize * sizeof(char));
 
       	UA[0] = F;
       	UA[1] = A_RS;
-      	UA[2] = C_UA;
+      	UA[2] = C_SET;
       	UA[3] = UA[1] ^ UA[2];
       	UA[4] = F;
 
@@ -365,7 +419,7 @@ int llclose(int fd, Mode connectionMode){
           char* DISC = malloc(SupervisionSize * sizeof(char));
 
           DISC[0] = F;
-          DISC[1] = A_RS;
+          DISC[1] = A_SR;
           DISC[2] = C_DISC;
           DISC[3] = DISC[1] ^ DISC[2];
           DISC[4] = F;
@@ -400,6 +454,7 @@ int recieveSupervisonFrame(int fd, char * frame){
     char c;
 		if(estado < 5){
 			int retorno = read(fd, &c, 1);
+			printf("%x\n",c);
       if(retorno == -1){
         printf("Error in llread()!! \n");
         return -1;
@@ -424,7 +479,6 @@ int recieveSupervisonFrame(int fd, char * frame){
           estado++;
         }
         else if(c != F){
-					printf("Receiving garbage\n");
           size = 0;
           estado = 0;
         }
@@ -440,7 +494,6 @@ int recieveSupervisonFrame(int fd, char * frame){
         estado = 1;
       }
       else{
-				printf("Receiving garbage\n");
         size = 0;
         estado = 0;
       }
@@ -456,7 +509,6 @@ int recieveSupervisonFrame(int fd, char * frame){
         estado = 1;
       }
       else{
-				printf("Receiving garbage\n");
         size = 0;
         estado = 0;
       }
@@ -468,7 +520,6 @@ int recieveSupervisonFrame(int fd, char * frame){
           estado++;
         }
         else{
-					printf("Receiving garbage\n");
           size = 0;
           estado = 0;
         }

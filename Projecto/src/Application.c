@@ -104,7 +104,6 @@ int receive(){
     while(!done){
      
       int size = llread(appLayer->fd, package);
-			printf("Size = %d\n",size);
 			int nPackages = 0;
       if(package[0] == END){
         done = TRUE;
@@ -123,10 +122,8 @@ int receive(){
 							fileName[i] = package[i+j+2];
 						}
 					}
-					if(j == 1)
-						printf("Starting Reading the Size from First Package...\n");
-					else printf("Starting Reading the Name from First Package...\n");
 					j+= i + 2;
+					printf("Starting receiving...\n");
 				}
 				fileSize = atoi(fileSizeS);
 				file = fopen(fileName, "wb");
