@@ -67,8 +67,8 @@ int send(){
 		nPackages++;
 		fBytes[0] = DATA;
 		fBytes[1] = nPackages;
-		fBytes[2] = bytes/256;
-		fBytes[3] = bytes%256;
+		fBytes[2] = bytes >> 8;
+		fBytes[3] = bytes & 0xFF;
 		if(llwrite(appLayer->fd, fBytes, bytes + 4) == -1){
 			printf("Error cannot send package %d... \n", nPackages);
 			return 0;
@@ -138,6 +138,7 @@ int receive(){
 				}
 			}
 			if(package[0] == DATA && file != NULL){
+
 				printf("Data package: %d received!\n", package[1]);
 				int tamanho = (unsigned char)package[2] << 8 | (unsigned char)package[3];
 				fwrite(&package[4], sizeof(char), tamanho,file);
