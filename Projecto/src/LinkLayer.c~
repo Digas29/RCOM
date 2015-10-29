@@ -148,7 +148,7 @@ int llopen(int fd, Mode connectionMode){
       	UA[3] = UA[1] ^ UA[2];
       	UA[4] = F;
 
-				sendSupervisonFrame(fd, UA);
+				//sendSupervisonFrame(fd, UA);
         free(UA);
         connected = 1;
 				printf("Connection established! :)\n");

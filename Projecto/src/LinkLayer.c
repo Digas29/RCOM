@@ -107,7 +107,7 @@ int llopen(int fd, Mode connectionMode){
 
 	if(connectionMode == TRANSMITTER) {
 		while (!connected) {
-			if (tries == 0 || timeExceeded) { //TOFIX para que é isto dos tries?
+			if (tries == 0 || timeExceeded) {
 				if (tries >= linkLayer->numTransmissions) {
 					printf("Error: number of tries exceeded.\n");
 					printf("Connection aborted.\n");
@@ -148,7 +148,7 @@ int llopen(int fd, Mode connectionMode){
       	UA[3] = UA[1] ^ UA[2];
       	UA[4] = F;
 
-				//sendSupervisonFrame(fd, UA);
+				sendSupervisonFrame(fd, UA);
         free(UA);
         connected = 1;
 				printf("Connection established! :)\n");
@@ -251,7 +251,7 @@ int llread(int fd, char * data){
         size++;
 			}
       break;
-		default:
+    default:
       done = TRUE;
       break;
     }
@@ -261,11 +261,6 @@ int llread(int fd, char * data){
 	if(buffer[0] != F || buffer[1] != A_SR || buffer[3] != (buffer[1] ^ buffer[2])){
 		printf("Frame received with BCC wrong... \n");
 		return -1;
-	}
-	else if(buffer[4] == F){
-	printf("entrou aqui");
-	llopen(fd,RECEIVER);
-	return 0;
 	}
 
   int dataSize = newSize - DataSize * sizeof(char);
