@@ -247,6 +247,11 @@ int llread(int fd, char * data){
         buffer[size] = c;
         size++;
         estado++;
+				if(size <=estado)
+{
+estado = 1;
+size= 1;
+}
       }
 			else{
         buffer[size] = c;
@@ -262,6 +267,8 @@ int llread(int fd, char * data){
   int newSize = destuff(buffer, size);
 	if(buffer[0] != F || buffer[1] != A_SR || buffer[3] != (buffer[1] ^ buffer[2])){
 		printf("Frame received with BCC wrong... \n");
+	printf("BUFER0: 0x%x\n BUFER1: 0x%x\n BUFER2: 0x%x\n BUFER3: 0x%x\n",buffer[0],buffer[1],buffer[2],buffer[3]);
+		free(buffer);
 		return -1;
 	}
 
