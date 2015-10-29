@@ -29,6 +29,7 @@ int main(int argc, char** argv)
 
 	initAppLayer(port, connectionMode, baudRate, messageMaxSize, retries, timeout, fileName);
 
+	if(connectionMode != RECEIVER){
 	FILE* fileptr = fopen("Statistics.txt","w");
 	
 	fprintf(fileptr,("Number of Frames Received/Transmited : %d\n"),globalStatistics->numberOfFrameReceived);
@@ -36,6 +37,7 @@ int main(int argc, char** argv)
 	fprintf(fileptr,("Number of REJ Received/Transmited : %d\n"),globalStatistics->numberOfREJ);
 	
 	free(globalStatistics);// free the global Statistics variable
+	}
 	return 0;
 }
 

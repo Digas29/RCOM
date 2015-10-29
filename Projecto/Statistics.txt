@@ -1,3 +1,0 @@
-Number of Frames Received/Transmited : 0
-Number of Timeouts Occurrences : 0
-Number of REJ Received/Transmited : 1
