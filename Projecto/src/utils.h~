@@ -17,5 +17,3 @@ int numberOfREJ;
 } Statistics;
 
 Statistics* globalStatistics;
-
-void initializeStatistics();
