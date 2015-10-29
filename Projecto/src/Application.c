@@ -68,7 +68,7 @@ int receive(){
     int done = FALSE;
 		char fileName[20] = "";
 		char fileSizeS[20] = "";
-		unsigned int fileSize;
+		unsigned int fileSize; // isto nao esta sendo usado caro
  		char package[APP_MAX_SIZE];
 		memset(package, 0, APP_MAX_SIZE);
     while(!done){
