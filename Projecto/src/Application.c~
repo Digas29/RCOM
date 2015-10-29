@@ -124,8 +124,8 @@ int receive(){
 						}
 					}
 					if(j == 1)
-						printf("Starting receiving the Size...\n");
-					else printf("Starting receiving the Name...\n");
+						printf("Starting Reading the Size from First Package...\n");
+					else printf("Starting Reading the Name from First Package...\n");
 					j+= i + 2;
 				}
 				fileSize = atoi(fileSizeS);

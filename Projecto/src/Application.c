@@ -104,6 +104,8 @@ int receive(){
     while(!done){
      
       int size = llread(appLayer->fd, package);
+			if(size == -1)
+				continue;
 			printf("Size = %d\n",size);
 			int nPackages = 0;
       if(package[0] == END){
