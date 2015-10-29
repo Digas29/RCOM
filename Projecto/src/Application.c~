@@ -26,7 +26,7 @@ int initAppLayer(char * port, Mode connectionMode, int baudRate, int messageMaxS
   }
   appLayer->mode = connectionMode;
   appLayer->fileName = fileName;
-  if(!startLinkLayer(appLayer->fd, port, connectionMode, baudRate, messageMaxSize, timeout, retries)){
+  if(!startLinkLayer(appLayer->fd, port, connectionMode, baudRate, messageMaxSize, retries, timeout)){
     printf("Error in initialize Link Layer.\n");
     return 0;
   }
@@ -46,17 +46,15 @@ int send(){
     return 0;
   }
 
-  fseek(file, 0, SEEK_END); // file points to the end of the file
-  unsigned int fileSize = ftell(file); // get the file size
-  fseek(file, 0, SEEK_SET); // return pointer to the start of the file
+  fseek(file, 0, SEEK_END);
+  unsigned int fileSize = ftell(file);
+  fseek(file, 0, SEEK_SET);
   char fileSizeString[20];
   sprintf(fileSizeString, "%u", fileSize);
   printf("File size: %u Bytes \n", fileSize);
-
   if(llopen(appLayer->fd,appLayer->mode) < 0){
     return 0;
   }
-
   if(sendControlPackage(START,appLayer->fileName, fileSizeString) < 0){
     printf("Error: can't send start control package\n");
     return 0;
@@ -98,12 +96,15 @@ int receive(){
     int done = FALSE;
 		FILE* file; 
 		char fileName[20] = "";
+		char fileSizeS[20] = "";
+		unsigned int fileSize; // isto nao esta sendo usado caro
  		char package[APP_MAX_SIZE];
 		memset(package, 0, APP_MAX_SIZE);
 
     while(!done){
      
       int size = llread(appLayer->fd, package);
+			printf("Size = %d\n",size);
 			int nPackages = 0;
       if(package[0] == END){
         done = TRUE;
@@ -112,14 +113,22 @@ int receive(){
 				int j = 1;
 				while(j < size){
 					int i = 0;
-					if(package[j] == NAME){
+					if(package[j] == SIZE){
+						for(; i < package[j+1]; i++){
+							fileSizeS[i] = package[i+j+2];
+						}
+					}
+					else if(package[j] == NAME){
 						for(; i < package[j+1]; i++){
 							fileName[i] = package[i+j+2];
 						}
 					}
+					if(j == 1)
+						printf("Starting receiving the Size...\n");
+					else printf("Starting receiving the Name...\n");
 					j+= i + 2;
-					printf("Starting receiving...\n");
 				}
+				fileSize = atoi(fileSizeS);
 				file = fopen(fileName, "wb");
 				if(!file){
 					printf("Error the specified file cannot be created! \n");

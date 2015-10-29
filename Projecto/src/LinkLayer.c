@@ -192,6 +192,7 @@ int llwrite(int fd, char * buffer, unsigned int length){
 		recieveSupervisonFrame(fd, response);
     if(response[1] == A_SR || response[0] == F){
       if((response[2] & 0x0F) == C_REJ){
+	globalStatistics->numberOfREJ++;
         if((response[2] >> 5) == linkLayer->sequenceNumber){
           offAlarm();
           tries = 0;
@@ -206,6 +207,7 @@ int llwrite(int fd, char * buffer, unsigned int length){
           offAlarm();
           linkLayer->sequenceNumber = (response[2] >> 5);
           done = TRUE;
+	globalStatistics->numberOfFrameReceived++;
         }
         else{
 					timeExceeded = 1;
@@ -272,9 +274,10 @@ int llread(int fd, char * data){
   response[1] = A_SR;
   response[4] = F;
   if(linkLayer->sequenceNumber == sn){
-    if(BCC != buffer[newSize - 2]){
+    if(BCC != buffer[newSize - 2]){ //if frame got corrupted
       printf("Frame received with BCC2 wrong... \n Rejecting frame (REJ)... \n");
       response[2] = (linkLayer->sequenceNumber << 5) | C_REJ;
+	globalStatistics->numberOfREJ++;
     }
     else{
       if(linkLayer->sequenceNumber == 0){
@@ -285,6 +288,7 @@ int llread(int fd, char * data){
       }
       process = TRUE;
       response[2] = (linkLayer->sequenceNumber << 5) | C_RR;
+	globalStatistics->numberOfFrameReceived++;
     }
   }
   else{
