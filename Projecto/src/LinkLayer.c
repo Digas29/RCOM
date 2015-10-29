@@ -190,7 +190,7 @@ int llwrite(int fd, char * buffer, unsigned int length){
     char response[MAX_SIZE];
     
 		recieveSupervisonFrame(fd, response);
-    if(response[1] == A_SR){
+    if(response[1] == A_SR || response[0] == F){
       if((response[2] & 0x0F) == C_REJ){
         if((response[2] >> 5) == linkLayer->sequenceNumber){
           offAlarm();
@@ -208,8 +208,7 @@ int llwrite(int fd, char * buffer, unsigned int length){
           done = TRUE;
         }
         else{
-          printf("Something went wrong in RR... \n");
-					tries = 0;
+					timeExceeded = 1;
         }
       }
     }
@@ -302,7 +301,7 @@ int llread(int fd, char * data){
   return -1;
 }
 int llclose(int fd, Mode connectionMode){
-  printf("Disconnecting...\n");
+  printf("\nDisconnecting...\n");
 
 	int tries = 0, disconnected = 0;
 
@@ -421,6 +420,7 @@ int recieveSupervisonFrame(int fd, char * frame){
           estado++;
         }
         else if(c != F){
+					printf("Receiving garbage\n");
           size = 0;
           estado = 0;
         }
@@ -436,6 +436,7 @@ int recieveSupervisonFrame(int fd, char * frame){
         estado = 1;
       }
       else{
+				printf("Receiving garbage\n");
         size = 0;
         estado = 0;
       }
@@ -451,6 +452,7 @@ int recieveSupervisonFrame(int fd, char * frame){
         estado = 1;
       }
       else{
+				printf("Receiving garbage\n");
         size = 0;
         estado = 0;
       }
@@ -462,6 +464,7 @@ int recieveSupervisonFrame(int fd, char * frame){
           estado++;
         }
         else{
+					printf("Receiving garbage\n");
           size = 0;
           estado = 0;
         }

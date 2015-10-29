@@ -1,5 +1,21 @@
 #include "Application.h"
 
+void progressBar(float current, float total) {
+	float percentage = 100.0 * current / total;
+
+	printf("\rCompleted: %6.2f%% [", percentage);
+
+	int i, len = 51;
+	int pos = percentage * len / 100.0;
+
+	for (i = 0; i < len; i++)
+		i <= pos ? printf("=") : printf(" ");
+
+	printf("]");
+
+	fflush(stdout);
+}
+
 int initAppLayer(char * port, Mode connectionMode, int baudRate, int messageMaxSize, int retries, int timeout, char* fileName){
   appLayer = (ApplicationLayer *) malloc(sizeof(ApplicationLayer));
   appLayer->fd = openPort(port);
@@ -43,6 +59,7 @@ int send(){
     printf("Error: can't send start control package\n");
     return 0;
   }
+	printf("Starting sending...\n");
 	unsigned int bytes;
 	char fBytes[appLayer->messageMaxSize + 2];
 	int nPackages = 0;
@@ -54,6 +71,7 @@ int send(){
 			printf("Error cannot send package %d... \n", nPackages);
 			return 0;
 		}
+		progressBar(nPackages, fileSize/appLayer->messageMaxSize+1);
 	}
   if (fclose(file) != 0) {
     printf("Error: File was not closed....\n");
@@ -86,6 +104,7 @@ int receive(){
     while(!done){
      
       int size = llread(appLayer->fd, package);
+			int nPackages = 0;
       if(package[0] == END){
         done = TRUE;
       }
@@ -104,6 +123,7 @@ int receive(){
 						}
 					}
 					j+= i + 2;
+					printf("Starting receiving...\n");
 				}
 				fileSize = atoi(fileSizeS);
 				file = fopen(fileName, "wb");
@@ -113,8 +133,11 @@ int receive(){
 				}
 			}
 			if(package[0] == DATA && file != NULL){
+				nPackages++;
+				progressBar(nPackages, fileSize/appLayer->messageMaxSize+1);
 				fwrite(&package[2], sizeof(char), package[1],file);
 			}
+			
     	memset(package, 0, APP_MAX_SIZE);
   }
   if (fclose(file) != 0) {
