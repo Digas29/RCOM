@@ -186,6 +186,9 @@ int llwrite(int fd, char * buffer, unsigned int length){
         printf("Error in write data frame...\n");
         return -1;
       }
+	if(tries!=0){
+	globalStatistics->numberOftimeOuts++;	
+	}
       tries++;
       setAlarm(linkLayer->timeout);
     }
@@ -283,6 +286,7 @@ int llread(int fd, char * data){
     if(BCC != buffer[newSize - 2]){ //if frame got corrupted
       printf("Frame received with BCC2 wrong... \n Rejecting frame (REJ)... \n");
       response[2] = (linkLayer->sequenceNumber << 5) | C_REJ;
+			globalStatistics->numberOfREJ++;
     }
     else{
       if(linkLayer->sequenceNumber == 0){

@@ -104,7 +104,6 @@ int receive(){
      
       int size = llread(appLayer->fd, package);
 			if(size == -1){
-				globalStatistics->numberOfREJ++;
 				continue;
 }
 			int nPackages = 0;
