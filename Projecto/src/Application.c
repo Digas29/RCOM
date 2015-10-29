@@ -134,7 +134,6 @@ int receive(){
 			}
 			if(package[0] == DATA && file != NULL){
 				nPackages++;
-				progressBar(nPackages, fileSize/appLayer->messageMaxSize+1);
 				fwrite(&package[2], sizeof(char), package[1],file);
 			}
 			
