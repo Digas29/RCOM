@@ -97,7 +97,6 @@ int receive(){
 		FILE* file; 
 		char fileName[20] = "";
 		char fileSizeS[20] = "";
-		unsigned int fileSize; // isto nao esta sendo usado caro
  		char package[APP_MAX_SIZE];
 		memset(package, 0, APP_MAX_SIZE);
 
@@ -131,7 +130,6 @@ int receive(){
 					else printf("Starting Reading the Name from First Package...\n");
 					j+= i + 2;
 				}
-				fileSize = atoi(fileSizeS);
 				file = fopen(fileName, "wb");
 				if(!file){
 					printf("Error the specified file cannot be created! \n");

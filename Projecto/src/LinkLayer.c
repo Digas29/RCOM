@@ -46,6 +46,8 @@ int getBaudrate(int baudrate) {
 		return -1;
 	}
 }
+
+
 int openPort(char * port){
   return open(port, O_RDWR | O_NOCTTY );
 }
@@ -192,7 +194,7 @@ int llwrite(int fd, char * buffer, unsigned int length){
 		recieveSupervisonFrame(fd, response);
     if(response[1] == A_SR || response[0] == F){
       if((response[2] & 0x0F) == C_REJ){
-	globalStatistics->numberOfREJ++;
+				globalStatistics->numberOfREJ++;
         if((response[2] >> 5) == linkLayer->sequenceNumber){
           offAlarm();
           tries = 0;
@@ -226,7 +228,7 @@ int llread(int fd, char * data){
   char * buffer = (char*)malloc(APP_MAX_SIZE*2);
   while(!done){
     char c;
-    if(estado < 3){
+    if(estado < 2){
 			int retorno = read(fd, &c, 1);
       if(retorno == -1){
         printf("Error in llread()!! \n");
@@ -236,23 +238,19 @@ int llread(int fd, char * data){
 
     switch(estado){
     case 0:
-      if(c == F){
+			if(c == F){
         buffer[size] = c;
         size++;
         estado++;
       }
       break;
 		case 1:
-			if(c == F){
+			if(c == F && size != 1){
         buffer[size] = c;
         size++;
         estado++;
-				if(size <=estado)
-{
-estado = 1;
-size= 1;
-}
       }
+			else 	if(c == F && size == 1){;}
 			else{
         buffer[size] = c;
         size++;
@@ -265,10 +263,11 @@ size= 1;
   }
   int process = FALSE;
   int newSize = destuff(buffer, size);
+
+
 	if(buffer[0] != F || buffer[1] != A_SR || buffer[3] != (buffer[1] ^ buffer[2])){
 		printf("Frame received with BCC wrong... \n");
-	printf("BUFER0: 0x%x\n BUFER1: 0x%x\n BUFER2: 0x%x\n BUFER3: 0x%x\n",buffer[0],buffer[1],buffer[2],buffer[3]);
-		free(buffer);
+		free(buffer); 
 		return -1;
 	}
 
