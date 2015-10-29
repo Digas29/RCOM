@@ -61,9 +61,9 @@ int send(){
   }
 	printf("Starting sending...\n");
 	unsigned int bytes;
-	char fBytes[appLayer->messageMaxSize + 2];
+	char fBytes[appLayer->messageMaxSize + 4];
 	int nPackages = 0;
-	while((bytes = fread(&fBytes[2],sizeof(char), appLayer->messageMaxSize, file)) > 0){
+	while((bytes = fread(&fBytes[4],sizeof(char), appLayer->messageMaxSize, file)) > 0){
 		nPackages++;
 		fBytes[0] = DATA;
 		fBytes[1] = nPackages;
@@ -139,7 +139,7 @@ int receive(){
 			}
 			if(package[0] == DATA && file != NULL){
 				printf("Data package: %d \n", package[1]);
-				int tamanho = package[2] * 256 + package[3];
+				unsigned int tamanho = package[2] * 256 + package[3];
 				printf("Size data package: %d \n", tamanho);
 				fwrite(&package[4], sizeof(char), tamanho,file);
 			}
