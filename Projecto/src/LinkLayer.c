@@ -208,8 +208,8 @@ int llwrite(int fd, char * buffer, unsigned int length){
           done = TRUE;
         }
         else{
-          printf("Something went really wrong in RR... \n");
-          return -1;
+          printf("Something went wrong in RR... \n");
+					tries = 0;
         }
       }
     }
